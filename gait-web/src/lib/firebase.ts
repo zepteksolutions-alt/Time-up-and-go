@@ -3,6 +3,7 @@
 // account so the EXISTING Firestore security rules apply (no need to open them).
 // Writes gait results to `gait_assessments` with the same schema main.py used.
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import {
   addDoc,
@@ -20,9 +21,13 @@ import {
 import type { GaitSessionRecorder } from "./recorder";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  apiKey: "AIzaSyC4dFT0u_NWRmsbuQygQhQnW6nGuRUn4D8",
+  authDomain: "time-up-and-go.firebaseapp.com",
+  projectId: "time-up-and-go",
+  storageBucket: "time-up-and-go.firebasestorage.app",
+  messagingSenderId: "349614723887",
+  appId: "1:349614723887:web:871e36ae680382e726c7da",
+  measurementId: "G-ZQ3THM0376",
 };
 
 // Local development credentials live in gait-web/.env.local, which is ignored
@@ -32,6 +37,7 @@ const AUTH_EMAIL = import.meta.env.VITE_FIREBASE_AUTH_EMAIL;
 const AUTH_PASSWORD = import.meta.env.VITE_FIREBASE_AUTH_PASSWORD;
 
 const app = initializeApp(firebaseConfig);
+export const analytics = getAnalytics(app);
 const auth = getAuth(app);
 export const db = getFirestore(app);
 
