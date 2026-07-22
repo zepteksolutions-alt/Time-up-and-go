@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import Header, { SECTIONS, type SectionKey } from "./components/Header";
+import { useState } from "react";
+import Header from "./components/Header";
+import { SECTIONS, type SectionKey } from "./components/navigation";
 import CameraPage from "./components/CameraPage";
 import OverviewSection from "./components/OverviewSection";
 import PatientsSection from "./components/PatientsSection";
@@ -17,58 +18,129 @@ export default function App() {
   const [activePatientId, setActivePatientId] = useState("");
   const [active, setActive] = useState<SectionKey>("overview");
   const activePatientName = data.patientName(activePatientId);
-  const navClick = useRef(false);
+  const activeIndex = SECTIONS.findIndex((section) => section.key === active);
+  const activeSection = SECTIONS[activeIndex];
 
   const navigate = (key: SectionKey) => {
-    navClick.current = true;
     setActive(key);
-    document.getElementById(`sec-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => (navClick.current = false), 700);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      document.getElementById("page-content")?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
   };
 
-  // Scroll-spy: highlight whichever section is currently in view.
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (navClick.current) return;
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActive(visible.target.id.replace("sec-", "") as SectionKey);
-      },
-      { rootMargin: "-40% 0px -50% 0px", threshold: [0, 0.2, 0.5, 1] },
-    );
-    SECTIONS.forEach(({ key }) => {
-      const el = document.getElementById(`sec-${key}`);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
+  const previousSection = activeIndex > 0 ? SECTIONS[activeIndex - 1] : null;
+  const nextSection = activeIndex < SECTIONS.length - 1 ? SECTIONS[activeIndex + 1] : null;
 
   return (
     <div className="app-shell">
       <Header active={active} onNavigate={navigate} />
 
-      <main className="page-main">
+      <main id="page-content" className="page-main">
         <PendingUploadsBanner />
-        <section id="sec-overview" className="page-block">
+
+        <header className="page-context">
+          <div className="page-context__step" aria-hidden="true">
+            <strong>{String(activeIndex + 1).padStart(2, "0")}</strong>
+            <span>/ {String(SECTIONS.length).padStart(2, "0")}</span>
+          </div>
+          <div>
+            <p className="page-context__eyebrow">{activeSection.eyebrow}</p>
+            <h1 className="page-context__title">{activeSection.title}</h1>
+            <p className="page-context__description">{activeSection.description}</p>
+          </div>
+        </header>
+
+        <section
+          id="panel-overview"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+          hidden={active !== "overview"}
+        >
           <OverviewSection data={data} />
         </section>
-        <section id="sec-patients" className="page-block">
-          <PatientsSection data={data} activePatientId={activePatientId} setActivePatientId={setActivePatientId} />
+        <section
+          id="panel-patients"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-patients"
+          hidden={active !== "patients"}
+        >
+          <PatientsSection
+            data={data}
+            activePatientId={activePatientId}
+            setActivePatientId={setActivePatientId}
+          />
         </section>
-        <section id="sec-camera" className="page-block">
+        <section
+          id="panel-camera"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-camera"
+          hidden={active !== "camera"}
+        >
           <CameraPage activePatientId={activePatientId} activePatientName={activePatientName} />
         </section>
-        <section id="sec-records" className="page-block">
+        <section
+          id="panel-records"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-records"
+          hidden={active !== "records"}
+        >
           <RecordsSection data={data} />
         </section>
-        <section id="sec-disease" className="page-block">
+        <section
+          id="panel-disease"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-disease"
+          hidden={active !== "disease"}
+        >
           <DiseaseSection data={data} />
         </section>
-        <section id="sec-guide" className="page-block">
+        <section
+          id="panel-guide"
+          className="page-panel"
+          role="tabpanel"
+          aria-labelledby="tab-guide"
+          hidden={active !== "guide"}
+        >
           <GuideSection />
         </section>
+
+        <nav className="page-stepper" aria-label="เปลี่ยนหน้าระบบ">
+          <div>
+            {previousSection && (
+              <button type="button" className="page-stepper__button" onClick={() => navigate(previousSection.key)}>
+                <span aria-hidden="true">←</span>
+                <span>
+                  <small>หน้าก่อนหน้า</small>
+                  <strong>{previousSection.label}</strong>
+                </span>
+              </button>
+            )}
+          </div>
+          <div>
+            {nextSection && (
+              <button
+                type="button"
+                className="page-stepper__button page-stepper__button--next"
+                onClick={() => navigate(nextSection.key)}
+              >
+                <span>
+                  <small>หน้าถัดไป</small>
+                  <strong>{nextSection.label}</strong>
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
+            )}
+          </div>
+        </nav>
       </main>
     </div>
   );

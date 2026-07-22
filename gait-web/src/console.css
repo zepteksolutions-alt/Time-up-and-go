@@ -58,6 +58,7 @@
 .gc-cam__start-btn:focus-visible,
 .gc-cam__stop-btn:focus-visible,
 .app-brand:focus-visible,
+.page-stepper__button:focus-visible,
 .modal__close:focus-visible {
   outline: 2px solid var(--clr-primary-600);
   outline-offset: 2px;

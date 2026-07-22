@@ -1,19 +1,8 @@
-// Sticky top header + horizontal quick-jump nav (replaces the old sidebar).
+// Sticky application header with a keyboard-accessible workflow tab bar.
+import { useEffect, type KeyboardEvent } from "react";
 import DeviceStatusChip from "./DeviceStatusChip";
 import DeviceResetButton from "./DeviceResetButton";
-
-export type SectionKey = "overview" | "patients" | "camera" | "records" | "disease" | "guide";
-
-// Page + nav order. Camera sits right after Patients per the workflow:
-// manage/select the patient, then run the gait test.
-export const SECTIONS: { key: SectionKey; label: string }[] = [
-  { key: "overview", label: "ภาพรวม" },
-  { key: "patients", label: "ผู้ทดสอบ" },
-  { key: "camera", label: "กล้องทดสอบ" },
-  { key: "records", label: "ผลการทดสอบ" },
-  { key: "disease", label: "เสี่ยงโรค" },
-  { key: "guide", label: "วิธีอ่านผล" },
-];
+import { SECTIONS, type SectionKey } from "./navigation";
 
 interface Props {
   active: SectionKey;
@@ -21,6 +10,34 @@ interface Props {
 }
 
 export default function Header({ active, onNavigate }: Props) {
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(`tab-${active}`)?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [active]);
+
+  const focusAndNavigate = (key: SectionKey) => {
+    onNavigate(key);
+    window.requestAnimationFrame(() => document.getElementById(`tab-${key}`)?.focus());
+  };
+
+  const handleTabKey = (event: KeyboardEvent<HTMLButtonElement>, key: SectionKey) => {
+    const currentIndex = SECTIONS.findIndex((section) => section.key === key);
+    let nextIndex: number | null = null;
+
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % SECTIONS.length;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + SECTIONS.length) % SECTIONS.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = SECTIONS.length - 1;
+
+    if (nextIndex === null) return;
+    event.preventDefault();
+    focusAndNavigate(SECTIONS[nextIndex].key);
+  };
+
   return (
     <header className="app-header">
       <div className="app-header__inner">
@@ -37,15 +54,22 @@ export default function Header({ active, onNavigate }: Props) {
           </span>
         </button>
 
-        <nav className="app-nav" aria-label="เมนูหลัก">
-          {SECTIONS.map(({ key, label }) => (
+        <nav className="app-nav" aria-label="หน้าหลักของระบบ" role="tablist">
+          {SECTIONS.map(({ key, label }, index) => (
             <button
               key={key}
+              id={`tab-${key}`}
               type="button"
+              role="tab"
+              aria-selected={active === key}
+              aria-controls={`panel-${key}`}
+              tabIndex={active === key ? 0 : -1}
               className={`app-nav__link ${active === key ? "app-nav__link--active" : ""}`}
               onClick={() => onNavigate(key)}
+              onKeyDown={(event) => handleTabKey(event, key)}
             >
-              {label}
+              <span className="app-nav__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span>{label}</span>
             </button>
           ))}
         </nav>
