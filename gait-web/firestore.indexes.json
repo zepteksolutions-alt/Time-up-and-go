@@ -1,0 +1,32 @@
+{
+  "indexes": [
+    {
+      "comment": "All trials of one session, in trial order (3-trial averaging).",
+      "collectionGroup": "tug_results",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "session_id", "order": "ASCENDING" },
+        { "fieldPath": "trial_no", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "History / trend chart for one subject, newest first.",
+      "collectionGroup": "tug_results",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subject_key", "order": "ASCENDING" },
+        { "fieldPath": "finished_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Latest results list filtered to completed trials.",
+      "collectionGroup": "tug_results",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "finished_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

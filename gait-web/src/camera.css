@@ -1,0 +1,292 @@
+/* Gait-camera view styles (gc- prefix to avoid clashing with dashboard.css).
+   Uses the dashboard design tokens (--clr-*) so it matches the hospital theme. */
+
+/* Compact, centered camera layout — the camera is sized "just right", not
+   full-width. Stage maxes at 540px; the metrics panel sits beside it. */
+.gc-page {
+  display: grid;
+  grid-template-columns: minmax(0, 540px) 320px;
+  justify-content: center;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 920px) {
+  .gc-page {
+    grid-template-columns: minmax(0, 540px);
+  }
+}
+
+/* Two-camera layout: the pair of camera stages on the left, the controls +
+   fusion verdict + metrics panel on the right. Recomposes to a single column
+   (cameras stacked) on narrow screens rather than shrinking. */
+.gc-page2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+.gc-cams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .gc-page2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .gc-cams { grid-template-columns: 1fr; }
+}
+
+/* Two-camera confirmation panel */
+.gc-fusion {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.gc-fusion__cams {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--clr-text-secondary);
+  margin-bottom: 10px;
+}
+.gc-fusion__cams b { color: var(--clr-text); }
+.gc-fusion__verdict {
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: var(--r-field, 8px);
+  text-align: center;
+}
+.gc-fusion__verdict--single { background: #eef2f7; color: var(--clr-text-secondary); }
+.gc-fusion__verdict--agree-normal { background: var(--clr-low-bg); color: var(--clr-low); }
+.gc-fusion__verdict--agree-risk { background: var(--clr-high-bg); color: var(--clr-high); }
+.gc-fusion__verdict--disagree { background: var(--clr-mod-bg); color: var(--clr-mod); }
+
+.gc-cam {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.gc-cam__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-weight: 600;
+  color: var(--clr-text);
+  border-bottom: 1px solid var(--clr-border);
+}
+.gc-cam__badge {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: var(--clr-text-secondary);
+  font-weight: 700;
+}
+.gc-cam__badge--ready { background: var(--clr-low-bg); color: var(--clr-low); }
+.gc-cam__badge--loading { background: var(--clr-mod-bg); color: var(--clr-mod); }
+.gc-cam__badge--error { background: var(--clr-high-bg); color: var(--clr-high); }
+
+.gc-cam__header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gc-cam__stop-btn {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--clr-high-soft);
+  background: var(--clr-high-bg);
+  color: var(--clr-high);
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.gc-cam__stop-btn:hover { filter: brightness(0.96); }
+
+/* Camera picker — quiet by default; it is setup, not a primary control. */
+.gc-cam__device {
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  max-width: 190px;
+  padding: 5px 8px;
+  border-radius: var(--r-field, 8px);
+  border: 1px solid var(--clr-border);
+  background: #fff;
+  color: var(--clr-text-secondary);
+  cursor: pointer;
+}
+.gc-cam__device:hover { color: var(--clr-text); }
+
+.gc-cam__stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #0c1929;
+}
+.gc-cam__off {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 20px;
+}
+.gc-cam__start-btn {
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: var(--clr-primary-600);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all 0.15s var(--ease);
+}
+.gc-cam__start-btn:hover { background: var(--clr-primary-700); }
+.gc-cam__off-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  max-width: 280px;
+}
+.gc-cam__video,
+.gc-cam__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gc-cam__hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  color: #cbd5e1;
+  background: rgba(12, 25, 41, 0.6);
+}
+.gc-cam__hint--error { color: #fca5a5; }
+
+.gc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Controls bar */
+.gc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.gc-controls__patient {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+  color: var(--clr-text-secondary);
+}
+.gc-controls__patient strong { color: var(--clr-text); }
+
+.gc-btn {
+  border: 1px solid var(--clr-border);
+  background: #fff;
+  color: var(--clr-text);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.gc-btn:hover:not(:disabled) { background: #f1f5f9; }
+.gc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.gc-btn--primary { background: var(--clr-primary-600); border-color: var(--clr-primary-600); color: #fff; }
+.gc-btn--primary:hover:not(:disabled) { background: var(--clr-primary-700); }
+.gc-btn--danger { background: var(--clr-high); border-color: var(--clr-high); color: #fff; }
+.gc-btn--danger:hover:not(:disabled) { filter: brightness(0.95); }
+
+/* Live metrics panel */
+.gc-panel {
+  background: var(--clr-surface);
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.gc-panel__status { font-size: 1.05rem; font-weight: 800; }
+.gc-panel__disclaimer { font-size: 0.72rem; color: var(--clr-text-secondary); margin: 4px 0 14px; }
+.gc-panel__rows { display: flex; flex-direction: column; gap: 8px; }
+.gc-panel__row { display: flex; justify-content: space-between; font-size: 0.85rem; gap: 8px; }
+.gc-panel__row-label { color: var(--clr-text-secondary); }
+.gc-panel__row-value { font-variant-numeric: tabular-nums; font-weight: 600; }
+.gc-panel__reasons { margin-top: 14px; font-size: 0.8rem; color: var(--clr-primary-700); }
+
+.gc-rec {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--clr-high);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.gc-rec__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--clr-high);
+  animation: gc-blink 1s steps(2, start) infinite;
+}
+@keyframes gc-blink { 50% { opacity: 0.2; } }
+
+/* Summary modal */
+.gc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+.gc-modal {
+  background: var(--clr-surface);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  width: min(520px, 100%);
+  box-shadow: var(--shadow-lg);
+}
+.gc-modal__title { margin: 0 0 18px; color: var(--clr-text); }
+.gc-modal__rows { display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--clr-text); }
+.gc-modal__highlight { font-size: 1.05rem; }
+.gc-modal__scores { display: flex; flex-wrap: wrap; gap: 12px; color: var(--clr-text-secondary); font-size: 0.85rem; }
+.gc-modal__status-ok { color: var(--clr-low); font-weight: 600; }
+.gc-modal__status-err { color: var(--clr-high); font-weight: 600; }
+.gc-modal__docid { color: var(--clr-primary-700); font-size: 0.78rem; word-break: break-all; }
+.gc-modal .gc-btn { margin-top: 22px; }

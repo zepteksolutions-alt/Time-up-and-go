@@ -1,0 +1,24 @@
+/* Global reset — the look comes from dashboard.css (the ported hospital theme). */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Single-page layout: every section stacks and the whole page scrolls.
+   scroll-margin-top keeps anchored jumps clear of the mobile menu button. */
+.page-block {
+  scroll-margin-top: 24px;
+  margin-bottom: 40px;
+}
+.page-block:last-child {
+  margin-bottom: 0;
+}

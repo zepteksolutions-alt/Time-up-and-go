@@ -436,6 +436,22 @@ function renderDiseaseScoreCards(scores) {
 function renderDiseaseAssessments() {
   if (!dom.diseaseBody) return;
 
+  if (gaitAssessmentsError) {
+    const isPermissionDenied = gaitAssessmentsError.code === 'permission-denied';
+    dom.diseaseBody.innerHTML = `
+      <tr><td colspan="7" class="table-empty table-empty--error">
+        <div class="table-empty__inner">
+          <svg width="40" height="40" viewBox="0 0 24 24" style="color:var(--clr-high)">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+            <path d="M12 7v6m0 4h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <p>${isPermissionDenied ? 'ไม่มีสิทธิ์อ่านข้อมูล gait_assessments' : 'ไม่สามารถโหลดข้อมูล gait_assessments ได้'}</p>
+          <small>${isPermissionDenied ? 'กรุณาเพิ่มสิทธิ์ใน Firestore Rules ให้ collection นี้' : esc(gaitAssessmentsError.message)}</small>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
   if (allGaitAssessments.length === 0) {
     dom.diseaseBody.innerHTML = `
       <tr><td colspan="7" class="table-empty">

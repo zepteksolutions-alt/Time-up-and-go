@@ -1,0 +1,336 @@
+/* ================================================================
+   App shell redesign — sticky top header + centered single page.
+   Replaces the old sidebar layout. Reuses dashboard.css color tokens.
+   Loaded after dashboard.css so these win on the shared classes.
+   ================================================================ */
+
+.app-shell {
+  display: block;
+  min-height: 100vh;
+  background: var(--clr-bg);
+}
+
+/* ── Sticky top header ── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-sm);
+}
+/* Three named tracks instead of one flex row.
+   The header holds three things with different priorities and — critically —
+   different length behaviour: brand and nav are fixed-length, but the device
+   chips grow without bound as a board stays offline ("· 1 ชม.ที่แล้ว" becomes
+   "· 3 วันที่แล้ว"). In the old flex row that growth was absorbed by the nav,
+   which silently clipped ~198px of navigation at 1280px. Giving nav its own
+   minmax(0, 1fr) track and bounding the status track fixes the cause. */
+/* Two rows by measurement, not by taste.
+   Inside the 1180px content column the three elements need
+   brand(197) + status(483) + gaps(40) = 720px, leaving the nav 380px
+   when it requires 561px — a 181px deficit that persists even at a
+   1600px viewport. One row physically cannot hold all three, so the
+   nav gets a dedicated full-width row where it can never be clipped,
+   and the bounded status group sits beside the brand. */
+.app-header__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 12px clamp(16px, 4vw, 40px);
+  display: grid;
+  grid-template-areas:
+    "brand status"
+    "nav   nav";
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 8px;
+}
+.app-brand { grid-area: brand; }
+.app-nav { grid-area: nav; }
+.app-header__status {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--clr-primary-600);
+  flex-shrink: 0;
+}
+.app-brand__icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--clr-primary-50);
+  color: var(--clr-primary-600);
+}
+.app-brand__icon svg { width: 26px; height: 26px; }
+.app-brand__text { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.app-brand__text strong { font-size: 1.02rem; color: var(--clr-text); font-weight: 800; }
+.app-brand__text small { font-size: 0.68rem; color: var(--clr-text-secondary); letter-spacing: 0.02em; }
+
+/* ── ESP32 board presence chip ──
+   Bounded on purpose: the label is dynamic and can grow (device name +
+   state + elapsed time), so it truncates rather than pushing its
+   neighbours. The full text always remains in the title tooltip. */
+.device-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--clr-border);
+  background: #fff;
+  color: var(--clr-text-secondary);
+  min-width: 0;
+  /* No fixed cap: the chip sizes to its text so the full state reads
+     ("จุดหมุนตัว: ออฟไลน์ · 1 นาทีที่แล้ว"). The old 200px cap existed to stop
+     the chips from squeezing the nav, but the nav now owns its own header
+     row, so nothing downstream depends on the chip staying short. It can
+     still shrink if the row genuinely runs out of space. */
+  flex: 0 1 auto;
+}
+.device-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.device-chip__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+}
+.device-chip--online {
+  background: var(--clr-low-bg);
+  border-color: var(--clr-low-soft);
+  color: var(--clr-low);
+}
+.device-chip--online .device-chip__dot {
+  background: var(--clr-low);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+  animation: device-pulse 1.6s ease-in-out infinite;
+}
+.device-chip--offline {
+  background: var(--clr-high-bg);
+  border-color: var(--clr-high-soft);
+  color: var(--clr-high);
+}
+/* Checkpoint mid-test: not offline, just intentionally quiet. */
+.device-chip--busy {
+  background: var(--clr-primary-50);
+  border-color: var(--clr-primary-200);
+  color: var(--clr-primary-700);
+}
+.device-chip--busy .device-chip__dot {
+  background: var(--clr-primary-600);
+  animation: device-pulse 1.6s ease-in-out infinite;
+}
+.device-chip--offline .device-chip__dot {
+  background: var(--clr-high);
+}
+.device-chip__ago {
+  font-weight: 500;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+@keyframes device-pulse {
+  50% {
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+}
+
+.device-reset-btn {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--clr-mod-soft, #fde68a);
+  background: var(--clr-mod-bg, #fffbeb);
+  color: var(--clr-mod, #b45309);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s var(--ease);
+}
+.device-reset-btn:hover:not(:disabled) {
+  background: var(--clr-mod-soft, #fde68a);
+}
+.device-reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Pending-uploads warning banner ── */
+.pending-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--clr-mod-soft);
+  background: var(--clr-mod-bg);
+  color: #92400e;
+}
+.pending-banner--critical {
+  border-color: var(--clr-high-soft);
+  background: var(--clr-high-bg);
+  color: #991b1b;
+}
+.pending-banner__icon {
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+.pending-banner strong {
+  font-size: 0.92rem;
+}
+.pending-banner__hint {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+/* ── Horizontal quick-jump nav ── */
+.app-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.app-nav::-webkit-scrollbar { display: none; }
+.app-nav__link {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: all 0.15s var(--ease);
+}
+.app-nav__link:hover { background: var(--clr-primary-50); color: var(--clr-primary-700); }
+.app-nav__link--active {
+  background: var(--clr-primary-600);
+  color: #fff;
+}
+
+/* ── Centered single-page content ── */
+.page-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 40px) clamp(16px, 4vw, 40px) 64px;
+}
+
+.page-block {
+  /* Must clear the two-row sticky header (measured 112px) or anchor jumps
+     land underneath it. */
+  scroll-margin-top: 124px;
+  margin-bottom: 56px;
+}
+.page-block:last-child { margin-bottom: 0; }
+
+/* ── Header responsive recomposition ──────────────────────────────
+   Not a shrink: the three tracks are re-laid at each range so the
+   highest-priority element always gets the room it needs. */
+
+/* The elapsed-time suffix is the unbounded part. Below a wide viewport
+   it is the first thing dropped — the information stays available in
+   the chip's title tooltip, so nothing is lost. */
+@media (max-width: 1400px) {
+  .device-chip__ago { display: none; }
+}
+
+.app-header__status { justify-self: end; }
+
+/* Phones: the brand subtitle and the chip labels both compete for a
+   very narrow row, so the subtitle goes and the chips reduce to a
+   status dot plus a short label. */
+@media (max-width: 560px) {
+  .app-brand__text small { display: none; }
+  .app-header__inner { column-gap: 12px; }
+  .device-chip {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+  }
+  /* Below this width two full-length chips can no longer sit on one line,
+     so let the label wrap. Wrapping keeps every word readable; ellipsis
+     would hide the state, and there is no tooltip to recover it on touch. */
+  .device-chip__label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+  .device-reset-btn {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
+  .app-header__status { gap: 6px; }
+  /* Wrapped chip labels make the sticky header taller here (measured 143px),
+     so anchor jumps need the extra clearance or they land underneath it. */
+  .page-block { scroll-margin-top: 156px; }
+}
+
+.device-reset-btn__icon { display: none; }
+
+/* Phones: brand text + two chips + a worded button cannot share one row
+   (measured 479px of content in a 328px row at 360px wide). Identity
+   falls back to the mark alone and the reset control to its glyph — both
+   keep their accessible names — so the two board states stay readable,
+   which is the information staff actually need at a glance. */
+@media (max-width: 430px) {
+  .app-brand__text { display: none; }
+  /* Share whatever the row has left equally rather than capping at a fixed
+     width — a hard cap truncated "ออฟไลน์" mid-word, and title tooltips do
+     not exist on touch, so the state word has to survive on screen. */
+  /* stretch, not end-align: an end-aligned box that outgrows its column
+     overflows leftward and lands on top of the brand mark. */
+  .app-header__status { justify-self: stretch; min-width: 0; }
+  .device-chip {
+    max-width: none;
+    flex: 1 1 auto;
+    padding: 5px 8px;
+    gap: 5px;
+    border-radius: var(--r-panel, 10px);
+  }
+  /* Wrap rather than ellipsis at the smallest size: "จุดหมุนตัว: ออฟไลน์"
+     is ~14px too long for the row, and a clipped state word can't be
+     recovered by tooltip on touch. Two short lines stay fully legible. */
+  .device-chip__label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+  .device-reset-btn { flex: 0 0 auto; }
+  .device-reset-btn__full { display: none; }
+  .device-reset-btn__icon {
+    display: inline-block;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .device-reset-btn { padding: 6px 9px; }
+}

@@ -1,0 +1,23 @@
+# Local credentials and device secrets
+serviceAccountKey.json
+**/secrets.h
+**/firebase-auth.local.js
+gait-web/.env
+gait-web/.env.*
+!gait-web/.env.example
+
+# Dependencies and generated output
+**/node_modules/
+**/dist/
+**/.firebase/
+__pycache__/
+*.py[cod]
+
+# Local tooling and editor state
+.agents/
+.claude/
+**/.claude/
+**/.vscode/
+.idea/
+.DS_Store
+

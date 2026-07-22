@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// TUG Care Board — Firestore rules.
+// The web app AND the ESP32 both sign in with the shared account
+// (esp32@tugtest.com), so access is gated on "is the request authenticated".
+//
+// Why "write" (not just "create"):
+//   • ESP32 uploads TUG results via createDocument  → needs CREATE
+//   • Web assigns a patient to a result/assessment  → needs UPDATE
+//   • Web adds / deletes patients                    → needs CREATE/DELETE
+// The old rules used `allow write: if false`, which blocked ALL of the above
+// (the ESP could not even create tug_results, and "เลือกผู้ป่วย" failed).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Patient records: web adds / edits / deletes.
+    match /patients/{doc} {
+      allow read, write: if signedIn();
+    }
+
+    // TUG results: ESP32 creates them; web reads + assigns patient_id (update).
+    match /tug_results/{doc} {
+      allow read, write: if signedIn();
+    }
+
+    // Gait disease assessments: web (camera) creates + assigns patient_id.
+    match /gait_assessments/{doc} {
+      allow read, write: if signedIn();
+    }
+
+    // ESP32 presence heartbeat: ESP upserts device_status/chair; web reads it.
+    match /device_status/{doc} {
+      allow read, write: if signedIn();
+    }
+
+    // Remote reset command: web requests (reset_requested_at), ESP acks
+    // (reset_handled_at) before rebooting. See ESP_Chair.ino checkResetCommand().
+    match /device_commands/{doc} {
+      allow read, write: if signedIn();
+    }
+  }
+}
