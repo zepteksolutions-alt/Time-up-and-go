@@ -16,23 +16,18 @@
   }
 }
 
-/* Two-camera layout: the pair of camera stages on the left, the controls +
-   fusion verdict + metrics panel on the right. Recomposes to a single column
-   (cameras stacked) on narrow screens rather than shrinking. */
+/* Two rows: the camera pair spans the full width on top, then the info block
+   (controls, fusion verdict, live metrics) sits on its own row below. */
 .gc-page2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 24px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 .gc-cams {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   min-width: 0;
-}
-@media (max-width: 1100px) {
-  .gc-page2 { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
   .gc-cams { grid-template-columns: 1fr; }
@@ -187,10 +182,26 @@
 }
 .gc-cam__hint--error { color: #fca5a5; }
 
+/* Info row (below the cameras): a left column with the controls (top) and the
+   fusion verdict (below it), and a right column holding the live-metrics panel
+   that spans the full height beside them. */
 .gc-side {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(0, 1.4fr);
+  grid-template-areas:
+    "controls status"
+    "fusion   status";
   gap: 16px;
+  align-items: start;
+}
+.gc-side > .gc-controls { grid-area: controls; }
+.gc-side > .gc-fusion { grid-area: fusion; }
+.gc-side > .gc-panel { grid-area: status; }
+@media (max-width: 760px) {
+  .gc-side {
+    grid-template-columns: 1fr;
+    grid-template-areas: "controls" "fusion" "status";
+  }
 }
 
 /* Controls bar */
